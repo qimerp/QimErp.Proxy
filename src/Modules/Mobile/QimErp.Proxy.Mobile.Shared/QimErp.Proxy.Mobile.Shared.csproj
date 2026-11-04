@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="QimErp.Shared.Common" />
     <PackageReference Include="QFace.Sdk.RedisCache" />
+    <PackageReference Include="QFace.Sdk.Temporal" />
   </ItemGroup>
 
 </Project>
