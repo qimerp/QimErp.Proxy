@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -20,6 +21,19 @@ KNOWN_UNPUBLISHED = {
 }
 
 
+EXPECTED_PACKAGES = {
+    "qimerp/qimerp.platform": {"qimerp-platform-api"},
+    "qimerp/qimerp.corehr": {"qimerp-corehr-api"},
+    "qimerp/qimerp.performance": {"qimerp-performance-api"},
+    "qimerp/qimerp.learning": {"qimerp-learning-api"},
+    "qimerp/qimerp.payroll": {"qimerp-payroll-core-api"},
+    "qimerp/qimerp.finance": {"qimerp-finance-api"},
+    "qimerp/qimerp.operations": {"qimerp-operations-api"},
+    "qimerp/qimerp.core.reporting": {"qimerp-platform-reporting-api", "qimerp-platform-reporting-worker"},
+    "qimerp/qimerp.proxy": {"qimerp-proxy-mobile-api"},
+}
+
+
 def get_json(url, token):
     request = urllib.request.Request(
         url,
@@ -33,25 +47,39 @@ def get_json(url, token):
         with urllib.request.urlopen(request, timeout=30) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
-        raise RuntimeError(f"GitHub package API returned HTTP {error.code}") from error
+        try:
+            payload = json.loads(error.read(4096))
+            reason = payload.get("message") if isinstance(payload, dict) else None
+        except (OSError, ValueError, TypeError, AttributeError):
+            reason = None
+        if not isinstance(reason, str):
+            reason = "Response body did not contain a JSON error message"
+        path = urllib.parse.urlsplit(url).path
+        message = f"GitHub package API returned HTTP {error.code} at {path}: {reason}"
+        if token:
+            message = message.replace(token, "[REDACTED]")
+        message = re.sub(r"(?i)(?:gh[pousr]_[a-z0-9_]+|github_pat_[a-z0-9_]+)", "[REDACTED]", message)
+        message = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", message)
+        if len(message) > 300:
+            message = message[:297] + "..."
+        raise RuntimeError(message) from error
 
 
-def available_packages(owner, packages, token):
-    root = f"https://api.github.com/orgs/{urllib.parse.quote(owner, safe='')}/packages"
-    listed = set()
-    page = 1
-    while True:
-        entries = get_json(f"{root}?package_type=container&per_page=100&page={page}", token)
-        if not isinstance(entries, list):
-            raise RuntimeError("GitHub package listing was not an array")
-        listed.update(entry["name"] for entry in entries)
-        if len(entries) < 100:
-            break
-        page += 1
+def available_packages(repository, packages, token):
+    expected = EXPECTED_PACKAGES.get(repository.casefold())
+    if expected is None or not set(packages).issubset(expected):
+        raise RuntimeError("No container package policy matches this repository and package selection")
+    owner, name = repository.split("/", 1)
+    identity_url = f"https://api.github.com/repos/{urllib.parse.quote(owner, safe='')}/{urllib.parse.quote(name, safe='')}"
+    identity = get_json(identity_url, token)
+    full_name = identity.get("full_name") if isinstance(identity, dict) else None
+    if not isinstance(full_name, str) or full_name.casefold() != repository.casefold():
+        raise RuntimeError("Unexpected repository identity from GitHub package access check")
 
+    root = f"https://api.github.com/orgs/{urllib.parse.quote(owner, safe='')}/packages/container"
     results = []
     for package in packages:
-        url = f"{root}/container/{urllib.parse.quote(package, safe='')}"
+        url = f"{root}/{urllib.parse.quote(package, safe='')}"
         try:
             metadata = get_json(url, token)
         except RuntimeError as error:
@@ -60,13 +88,16 @@ def available_packages(owner, packages, token):
                 isinstance(cause, urllib.error.HTTPError)
                 and cause.code == 404
                 and package in KNOWN_UNPUBLISHED
-                and package not in listed
             ):
                 results.append((package, False))
                 continue
             raise
-        if metadata.get("name") != package:
+        if not isinstance(metadata, dict) or metadata.get("name") != package:
             raise RuntimeError(f"Unexpected metadata for container package {package}")
+        association = metadata.get("repository")
+        associated_name = association.get("full_name") if isinstance(association, dict) else None
+        if not isinstance(associated_name, str) or associated_name.casefold() != repository.casefold():
+            raise RuntimeError(f"Container package {package} is not associated with the expected repository")
         results.append((package, True))
     return results
 
@@ -75,7 +106,7 @@ def main():
     packages = sys.argv[1:]
     if not packages:
         raise RuntimeError("Specify at least one expected container package")
-    results = available_packages(os.environ["GITHUB_REPOSITORY_OWNER"], packages, os.environ["GH_TOKEN"])
+    results = available_packages(os.environ["GITHUB_REPOSITORY"], packages, os.environ["GH_TOKEN"])
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         for index, (package, exists) in enumerate(results, start=1):
             output.write(f"image_{index}={str(exists).lower()}\n")
