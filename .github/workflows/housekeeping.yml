@@ -30,8 +30,15 @@ jobs:
           KEEP_DAYS: '30'
         run: python3 .github/scripts/prune-runs.py
 
-      - name: Keep the newest 10 mobile-api images
+      - name: Check expected container packages
+        id: images
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/check-container-packages.py qimerp-proxy-mobile-api
+
+      - name: Keep the newest 10 mobile-api images
+        if: always() && steps.images.outputs.image_1 == 'true'
         uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
         with:
           package-name: qimerp-proxy-mobile-api
