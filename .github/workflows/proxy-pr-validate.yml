@@ -63,7 +63,6 @@ jobs:
       - name: Test
         run: |
           set -euo pipefail
-          dotnet test src/Modules/Mobile/QimErp.Proxy.Mobile.WebApi.Tests/QimErp.Proxy.Mobile.WebApi.Tests.csproj -c Release -m:3 -nodeReuse:false -p:UseSharedCompilation=false
-      - name: Stop build servers
-        if: always()
-        run: dotnet build-server shutdown >/dev/null 2>&1 || true
+          dotnet restore src/Modules/Mobile/QimErp.Proxy.Mobile.WebApi.Tests/QimErp.Proxy.Mobile.WebApi.Tests.csproj --disable-parallel -m:1
+          dotnet build src/Modules/Mobile/QimErp.Proxy.Mobile.WebApi.Tests/QimErp.Proxy.Mobile.WebApi.Tests.csproj -c Release --no-restore -m:1 -nodeReuse:false -p:UseSharedCompilation=false
+          dotnet test src/Modules/Mobile/QimErp.Proxy.Mobile.WebApi.Tests/QimErp.Proxy.Mobile.WebApi.Tests.csproj -c Release -m:3 -nodeReuse:false -p:UseSharedCompilation=false --no-build --no-restore
