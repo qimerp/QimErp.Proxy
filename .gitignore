@@ -82,3 +82,9 @@ appsettings.Development.json
 !.github/workflows/
 Library/
 __pycache__/
+
+!nuget.config
+
+# Local package cache and accidental host paths
+local-nuget/
+Library/
