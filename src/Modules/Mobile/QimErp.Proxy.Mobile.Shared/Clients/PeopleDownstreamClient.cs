@@ -23,8 +23,8 @@ public interface IPeopleDownstreamClient
     Task<Result<JsonElement>> GetDocumentsAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<Result<JsonElement>> MarkNewsReadAsync(Guid newsId, object body, CancellationToken cancellationToken = default);
     Task<Result<JsonElement>> ToggleNewsReactionAsync(Guid newsId, object body, CancellationToken cancellationToken = default);
-    Task<Result<JsonElement>> GetNewsContributionsAsync(Guid newsId, CancellationToken cancellationToken = default);
-    Task<Result<JsonElement>> CreateNewsContributionAsync(object body, CancellationToken cancellationToken = default);
+    Task<Result<JsonElement>> GetNewsCommentsAsync(Guid newsId, CancellationToken cancellationToken = default);
+    Task<Result<JsonElement>> CreateNewsCommentAsync(Guid newsId, object body, CancellationToken cancellationToken = default);
     Task<Result<List<CertificationResponse>>> GetCertificationsAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<Result<List<TrainingResponse>>> GetTrainingsAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<Result<List<NextOfKinResponse>>> GetNextOfKinsAsync(Guid employeeId, CancellationToken cancellationToken = default);
@@ -110,11 +110,11 @@ public sealed class PeopleDownstreamClient(
     public Task<Result<JsonElement>> ToggleNewsReactionAsync(Guid newsId, object body, CancellationToken cancellationToken = default)
         => PostRawAsync(string.Format(MobileApiConstants.Downstream.PeopleNewsReactionToggle, newsId), body, cancellationToken);
 
-    public Task<Result<JsonElement>> GetNewsContributionsAsync(Guid newsId, CancellationToken cancellationToken = default)
-        => GetRawAsync(string.Format(MobileApiConstants.Downstream.PeopleNewsContributions, newsId), cancellationToken);
+    public Task<Result<JsonElement>> GetNewsCommentsAsync(Guid newsId, CancellationToken cancellationToken = default)
+        => GetRawAsync(string.Format(MobileApiConstants.Downstream.PeopleNewsCommentsPage, newsId), cancellationToken);
 
-    public Task<Result<JsonElement>> CreateNewsContributionAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.PeopleContributionsCreate, body, cancellationToken);
+    public Task<Result<JsonElement>> CreateNewsCommentAsync(Guid newsId, object body, CancellationToken cancellationToken = default)
+        => PostRawAsync(string.Format(MobileApiConstants.Downstream.PeopleNewsComments, newsId), body, cancellationToken);
 
     public Task<Result<List<CertificationResponse>>> GetCertificationsAsync(Guid employeeId, CancellationToken cancellationToken = default)
         => GetAsync<List<CertificationResponse>>(string.Format(MobileApiConstants.Downstream.PeopleCertifications, employeeId), cancellationToken);

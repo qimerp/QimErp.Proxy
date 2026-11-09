@@ -4,8 +4,8 @@ namespace QimErp.Proxy.Mobile.WebApi.Features.Feed;
 
 /// <summary>
 /// Mobile passthroughs for company-news engagement: mark a post read, toggle a
-/// reaction (like), and list/create text comments (contributions) — all
-/// forwarded to the CoreHr People news module with the caller's JWT.
+/// reaction (like), and list/create public comments — all forwarded to the
+/// CoreHr People news module with the caller's JWT.
 /// </summary>
 public static class MobileFeedActions
 {
@@ -30,46 +30,71 @@ public static class MobileFeedActions
                 cancellationToken);
     }
 
-    public record ListCommentsQuery(Guid NewsId) : IRequest<Result<JsonElement>>;
+    public sealed record MobileComment(Guid Id, string EmployeeName, string Description, string Created);
+
+    public record ListCommentsQuery(Guid NewsId) : IRequest<Result<List<MobileComment>>>;
 
     public class ListCommentsHandler(IPeopleDownstreamClient peopleClient)
-        : IRequestHandler<ListCommentsQuery, Result<JsonElement>>
+        : IRequestHandler<ListCommentsQuery, Result<List<MobileComment>>>
     {
-        public Task<Result<JsonElement>> Handle(ListCommentsQuery request, CancellationToken cancellationToken)
-            => peopleClient.GetNewsContributionsAsync(request.NewsId, cancellationToken);
+        public async Task<Result<List<MobileComment>>> Handle(ListCommentsQuery request, CancellationToken cancellationToken)
+        {
+            var result = await peopleClient.GetNewsCommentsAsync(request.NewsId, cancellationToken);
+            if (result.IsFailure)
+            {
+                return Result.WithFailure<List<MobileComment>>(result.Error ?? new Error("Feed.CommentsUnavailable", "Comments are unavailable."), result.Message, result.Code);
+            }
+
+            var items = result.Data.ValueKind == JsonValueKind.Object && result.Data.TryGetProperty("items", out var page)
+                ? page
+                : result.Data;
+            if (items.ValueKind != JsonValueKind.Array)
+            {
+                return Result.WithSuccess(new List<MobileComment>());
+            }
+
+            return Result.WithSuccess(items.EnumerateArray().Select(ToComment).ToList());
+        }
     }
 
-    public record CreateCommentQuery(Guid NewsId, string Body) : IRequest<Result<JsonElement>>;
+    public record CreateCommentQuery(Guid NewsId, string Body) : IRequest<Result<MobileComment>>;
 
     public class CreateCommentHandler(IPeopleDownstreamClient peopleClient)
-        : IRequestHandler<CreateCommentQuery, Result<JsonElement>>
+        : IRequestHandler<CreateCommentQuery, Result<MobileComment>>
     {
-        public async Task<Result<JsonElement>> Handle(CreateCommentQuery request, CancellationToken cancellationToken)
+        public async Task<Result<MobileComment>> Handle(CreateCommentQuery request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.Body))
             {
-                return Result.WithFailure<JsonElement>(
+                return Result.WithFailure<MobileComment>(
                     new Error("Feed.CommentEmpty", "Comment cannot be empty."));
             }
 
-            // The news module models comments as "contributions" of type Other
-            // with a free-text description — the mobile app renders that as a
-            // comment thread. ContributorName is resolved downstream from the
-            // caller's JWT (the request still requires a non-empty value, so we
-            // pass a placeholder that the backend overwrites with the employee).
-            var body = new
+            var result = await peopleClient.CreateNewsCommentAsync(
+                request.NewsId,
+                new { body = request.Body.Trim() },
+                cancellationToken);
+            if (result.IsFailure)
             {
-                newsId = request.NewsId,
-                contributionType = "Other",
-                amount = (decimal?)null,
-                description = request.Body.Trim(),
-                contributorName = "Me",
-                metadata = (object?)null,
-                notes = (string?)null,
-            };
-            return await peopleClient.CreateNewsContributionAsync(body, cancellationToken);
+                return Result.WithFailure<MobileComment>(result.Error ?? new Error("Feed.CommentsUnavailable", "Comments are unavailable."), result.Message, result.Code);
+            }
+
+            return Result.WithSuccess(ToComment(result.Data));
         }
     }
+
+    private static MobileComment ToComment(JsonElement element) => new(
+        element.TryGetProperty("id", out var id) && id.TryGetGuid(out var guid) ? guid : Guid.Empty,
+        ReadString(element, "authorName"),
+        ReadString(element, "body"),
+        ReadString(element, "created"));
+
+    private static string ReadString(JsonElement element, string name) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(name, out var value) &&
+        value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? string.Empty
+            : string.Empty;
 }
 
 public class MobileFeedActionsEndpoint : ICarterModule
