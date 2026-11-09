@@ -127,8 +127,8 @@ public static class MobileApiConstants
         public const string PeopleNewsMy = "api/hr/news/my";
         public const string PeopleNewsRead = "api/hr/news/{0}/read";
         public const string PeopleNewsReactionToggle = "api/hr/news/{0}/reactions/toggle";
-        public const string PeopleNewsContributions = "api/hr/news/{0}/contributions";
-        public const string PeopleContributionsCreate = "api/hr/contributions";
+        public const string PeopleNewsComments = "api/hr/news/{0}/comments";
+        public const string PeopleNewsCommentsPage = "api/hr/news/{0}/comments?pageNumber=1&pageSize=100";
         public const string PeopleEmployee = "api/hr/employees/{0}";
         public const string PeoplePersonalInfo = "api/hr/employees/{0}/personal-info";
         public const string PeopleEssContactInfo = "api/hr/ess/contact-info";
