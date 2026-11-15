@@ -33,7 +33,7 @@ concurrency:
 jobs:
   changes:
     name: Select images
-    runs-on: [self-hosted, qimerp-ci]
+    runs-on: ${{ fromJSON(vars.DEPLOY_RUNS_ON || '["self-hosted","qimerp-ci-deploy"]') }}
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.select.outputs.matrix }}
@@ -67,7 +67,7 @@ jobs:
     name: Test
     needs: [changes]
     if: needs.changes.outputs.matrix != '[]'
-    runs-on: [self-hosted, qimerp-ci]
+    runs-on: ${{ fromJSON(vars.DEPLOY_RUNS_ON || '["self-hosted","qimerp-ci-deploy"]') }}
     timeout-minutes: 45
     env:
       MSBUILDDISABLENODEREUSE: "1"
@@ -113,7 +113,7 @@ jobs:
     name: Build & Push ${{ matrix.service }}
     needs: [changes, test]
     if: ${{ (needs.changes.outputs.matrix != '[]') && (github.event_name == 'workflow_dispatch' || vars.DEPLOY_ROUTE != 'Bare metal on the runtime box') }}
-    runs-on: [self-hosted, qimerp-ci]
+    runs-on: ${{ fromJSON(vars.DEPLOY_RUNS_ON || '["self-hosted","qimerp-ci-deploy"]') }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
