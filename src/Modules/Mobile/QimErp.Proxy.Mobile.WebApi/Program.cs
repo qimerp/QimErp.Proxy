@@ -1,3 +1,7 @@
+using QimErp.Proxy.Mobile.Shared.Database;
+using QimErp.Proxy.Mobile.Shared.Security;
+using QimErp.Proxy.Mobile.Shared.Services;
+
 var title = "QimERP Proxy Mobile API";
 var version = "v1";
 var description = "QimErp.Proxy.Mobile edge host for the Flutter ESS app. JWT-forwards to domain WebApis; no database.";
@@ -30,6 +34,16 @@ builder.Services.ConfigureHttpClientDefaults(http =>
 builder.Services.AddSwaggerDocumentation(assembly, title, version, description);
 builder.Services.AddProxyMobileShared(configuration);
 builder.Services.AddCoreServices(configuration, assembly);
+var commandStoreConnection = configuration.GetConnectionString("ProxyCommands");
+if (string.IsNullOrWhiteSpace(commandStoreConnection))
+    throw new InvalidOperationException("ConnectionStrings:ProxyCommands is required for durable mobile commands.");
+builder.Services.AddDbContextWithOutbox<ProxyCommandDbContext>(commandStoreConnection, configuration);
+builder.Services.AddIntegrityCheckRunner(configuration);
+builder.Services.AddIntegrityCheck<OutboxBackstopIntegrityCheck<ProxyCommandDbContext>>();
+builder.Services.AddSingleton<IProxyCommandPayloadProtector, ProxyCommandPayloadProtector>();
+// DATA-25: BlindIndex registered; no payload lookup-hash — N/A until content-based lookup exists.
+builder.Services.AddBlindIndex(configuration);
+builder.Services.AddScoped<IProxyCommandAcceptService, ProxyCommandAcceptService>();
 
 // IAM tokens carry no employeeId claim; resolve the current employee once per
 // request from the People module instead of trusting the token.

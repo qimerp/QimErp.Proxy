@@ -51,18 +51,22 @@ public class MobileFeedActionTests
     }
 
     [Fact]
-    public async Task ListComments_delegates()
+    public async Task ListComments_maps_paged_comments_to_the_list_the_app_reads()
     {
+        var commentId = Guid.NewGuid();
         var people = new Mock<IPeopleDownstreamClient>();
-        people.Setup(x => x.GetNewsContributionsAsync(NewsId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.WithSuccess(JsonDocument.Parse("""[]""").RootElement));
+        people.Setup(x => x.GetNewsCommentsAsync(NewsId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.WithSuccess(JsonDocument.Parse(
+                $$"""{"items":[{"id":"{{commentId}}","authorName":"Ama","body":"Nice update!","created":"2026-11-09T01:00:00Z"}],"totalCount":1}""").RootElement));
 
         var handler = new MobileFeedActions.ListCommentsHandler(people.Object);
 
         var result = await handler.Handle(new MobileFeedActions.ListCommentsQuery(NewsId), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        people.Verify(x => x.GetNewsContributionsAsync(NewsId, It.IsAny<CancellationToken>()), Times.Once);
+        result.Data.Should().ContainSingle().Which.Should().Be(
+            new MobileFeedActions.MobileComment(commentId, "Ama", "Nice update!", "2026-11-09T01:00:00Z"));
+        people.Verify(x => x.GetNewsCommentsAsync(NewsId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
@@ -78,16 +82,17 @@ public class MobileFeedActionTests
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        people.Verify(x => x.CreateNewsContributionAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()),
+        people.Verify(x => x.CreateNewsCommentAsync(It.IsAny<Guid>(), It.IsAny<object>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
-    public async Task CreateComment_forwards_body()
+    public async Task CreateComment_forwards_trimmed_body_to_the_comments_endpoint()
     {
         var people = new Mock<IPeopleDownstreamClient>();
-        people.Setup(x => x.CreateNewsContributionAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.WithSuccess(JsonDocument.Parse("""{"id":"c1"}""").RootElement));
+        people.Setup(x => x.CreateNewsCommentAsync(NewsId, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.WithSuccess(JsonDocument.Parse(
+                """{"id":"00000000-0000-0000-0000-000000000001","authorName":"Ama","body":"Nice update!","created":"2026-11-09T01:00:00Z"}""").RootElement));
 
         var handler = new MobileFeedActions.CreateCommentHandler(people.Object);
 
@@ -96,10 +101,11 @@ public class MobileFeedActionTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        result.Data.Description.Should().Be("Nice update!");
         people.Verify(
-            x => x.CreateNewsContributionAsync(
-                It.Is<object>(b =>
-                    b.ToString()!.Contains("Nice update!") && b.ToString()!.Contains(NewsId.ToString())),
+            x => x.CreateNewsCommentAsync(
+                NewsId,
+                It.Is<object>(b => b.ToString()!.Contains("Nice update!")),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
