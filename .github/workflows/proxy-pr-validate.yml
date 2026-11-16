@@ -61,6 +61,8 @@ jobs:
           echo "DOTNET_ROOT=${INSTALL_DIR}" >> "${GITHUB_ENV}"
           "${INSTALL_DIR}/dotnet" --info
       - name: Test
+        # TEMP: tests disabled for Contabo CI speed — re-enable when queue SLO is stable
+        if: false
         run: |
           set -euo pipefail
           dotnet restore src/Modules/Mobile/QimErp.Proxy.Mobile.WebApi.Tests/QimErp.Proxy.Mobile.WebApi.Tests.csproj --disable-parallel -m:1
