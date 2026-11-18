@@ -3,7 +3,7 @@ name: PR Validation — Proxy API
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main]
+    branches: [staging, main]
     paths:
       - 'src/Modules/**'
       - 'Directory.*.props'
@@ -12,7 +12,7 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/proxy-pr-validate.yml'
   push:
-    branches: [main]
+    branches: [staging, main]
     paths:
       - 'src/Modules/**'
       - 'Directory.*.props'
