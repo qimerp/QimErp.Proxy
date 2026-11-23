@@ -2,7 +2,7 @@ namespace QimErp.Proxy.Mobile.Shared.Clients;
 
 public static class DownstreamClientNames
 {
-    public const string Iam = "MobileDownstream.Iam";
+    public const string Platform = "MobileDownstream.Iam";
     public const string People = "MobileDownstream.People";
     public const string Leave = "MobileDownstream.Leave";
     public const string Payroll = "MobileDownstream.Payroll";

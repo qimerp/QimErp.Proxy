@@ -7,7 +7,7 @@ public static class GetMobileMe
     public class Query : IRequest<Result<MobileMeResponse>> { }
 
     public class Handler(
-        IIamDownstreamClient iamClient,
+        IPlatformDownstreamClient platformClient,
         IPeopleDownstreamClient peopleClient,
         ICurrentEmployeeResolver currentEmployeeResolver)
         : IRequestHandler<Query, Result<MobileMeResponse>>
@@ -18,7 +18,7 @@ public static class GetMobileMe
             JsonElement? user = null;
             JsonElement? employee = null;
 
-            var meResult = await iamClient.GetMeAsync(cancellationToken);
+            var meResult = await platformClient.GetMeAsync(cancellationToken);
             if (meResult.IsSuccess)
             {
                 user = meResult.Data;

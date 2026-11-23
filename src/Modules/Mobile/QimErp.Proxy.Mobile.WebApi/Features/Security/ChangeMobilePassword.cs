@@ -19,10 +19,10 @@ public static class ChangeMobilePassword
         }
     }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Command, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Command, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Command request, CancellationToken cancellationToken)
-            => iamClient.ChangePasswordAsync(new
+            => platformClient.ChangePasswordAsync(new
             {
                 request.CurrentPassword,
                 request.NewPassword

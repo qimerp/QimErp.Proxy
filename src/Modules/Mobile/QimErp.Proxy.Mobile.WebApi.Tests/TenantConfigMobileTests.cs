@@ -12,13 +12,13 @@ public class TenantConfigMobileTests
     [Fact]
     public async Task Handle_delegates_to_iam_with_domain()
     {
-        var iam = new Mock<IIamDownstreamClient>();
+        var platform = new Mock<IPlatformDownstreamClient>();
         var payload = JsonDocument.Parse(
             """{"company":"Calbank","domain":"calbank","isActive":true}""").RootElement;
-        iam.Setup(x => x.GetTenantConfigAsync("calbank", It.IsAny<CancellationToken>()))
+        platform.Setup(x => x.GetTenantConfigAsync("calbank", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.WithSuccess(payload));
 
-        var handler = new TenantConfigMobile.Handler(iam.Object);
+        var handler = new TenantConfigMobile.Handler(platform.Object);
 
         var result = await handler.Handle(
             new TenantConfigMobile.Query { Domain = "calbank" },
@@ -26,18 +26,18 @@ public class TenantConfigMobileTests
 
         result.IsSuccess.Should().BeTrue();
         result.Data.GetProperty("company").GetString().Should().Be("Calbank");
-        iam.Verify(x => x.GetTenantConfigAsync("calbank", It.IsAny<CancellationToken>()), Times.Once);
+        platform.Verify(x => x.GetTenantConfigAsync("calbank", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_forwards_downstream_failure()
     {
-        var iam = new Mock<IIamDownstreamClient>();
-        iam.Setup(x => x.GetTenantConfigAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var platform = new Mock<IPlatformDownstreamClient>();
+        platform.Setup(x => x.GetTenantConfigAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.WithFailure<JsonElement>(
                 new Error("GetTenantConfig.TenantNotFound", "Tenant not found."), code: "404"));
 
-        var handler = new TenantConfigMobile.Handler(iam.Object);
+        var handler = new TenantConfigMobile.Handler(platform.Object);
 
         var result = await handler.Handle(
             new TenantConfigMobile.Query { Domain = "missing" },

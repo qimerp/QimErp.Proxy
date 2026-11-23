@@ -17,10 +17,10 @@ public static class RefreshMobile
         }
     }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Command, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Command, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Command request, CancellationToken cancellationToken)
-            => iamClient.RefreshAsync(new
+            => platformClient.RefreshAsync(new
             {
                 request.AccessToken,
                 request.RefreshToken
