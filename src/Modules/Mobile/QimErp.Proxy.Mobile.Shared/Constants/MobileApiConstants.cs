@@ -106,16 +106,16 @@ public static class MobileApiConstants
 
     public static class Downstream
     {
-        public const string IamLogin = "api/auth/login";
-        public const string IamRefresh = "api/auth/token/refresh";
-        public const string IamMe = "api/auth/me";
-        public const string IamTenantConfig = "api/tenants/config/{0}";
-        public const string IamCompleteTwoFactor = "api/auth/login/complete-2fa";
-        public const string IamSessions = "api/auth/sessions";
-        public const string IamSessionsRevoke = "api/auth/sessions/revoke";
-        public const string IamSessionsRevokeAll = "api/auth/sessions/revoke-all";
-        public const string IamChangePassword = "api/auth/password/change";
-        public const string IamMyActivities = "api/tenant-activities/my";
+        public const string PlatformLogin = "api/auth/login";
+        public const string PlatformRefresh = "api/auth/token/refresh";
+        public const string PlatformMe = "api/auth/me";
+        public const string PlatformTenantConfig = "api/tenants/config/{0}";
+        public const string PlatformCompleteTwoFactor = "api/auth/login/complete-2fa";
+        public const string PlatformSessions = "api/auth/sessions";
+        public const string PlatformSessionsRevoke = "api/auth/sessions/revoke";
+        public const string PlatformSessionsRevokeAll = "api/auth/sessions/revoke-all";
+        public const string PlatformChangePassword = "api/auth/password/change";
+        public const string PlatformMyActivities = "api/tenant-activities/my";
         public const string BenefitEmployeeEnrollments = "api/hr/benefit/enrollments/employee/{0}";
         public const string SurveysMyResponsesPage = "api/hr/surveys/responses/my-responses/page";
         public const string SurveysAvailablePage = "api/hr/surveys/available/page";

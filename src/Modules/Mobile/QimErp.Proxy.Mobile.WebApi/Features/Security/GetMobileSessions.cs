@@ -6,10 +6,10 @@ public static class GetMobileSessions
 {
     public class Query : IRequest<Result<JsonElement>> { }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Query, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Query, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Query request, CancellationToken cancellationToken)
-            => iamClient.GetSessionsAsync(cancellationToken);
+            => platformClient.GetSessionsAsync(cancellationToken);
     }
 }
 

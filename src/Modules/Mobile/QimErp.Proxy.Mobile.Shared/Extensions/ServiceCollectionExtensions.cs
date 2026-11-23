@@ -8,7 +8,7 @@ public static class ServiceCollectionExtensions
         var options = configuration.GetSection(DownstreamOptions.SectionName).Get<DownstreamOptions>()
                       ?? new DownstreamOptions();
 
-        RegisterClient(services, DownstreamClientNames.Iam, options.Iam, options.TimeoutSeconds);
+        RegisterClient(services, DownstreamClientNames.Platform, options.Iam, options.TimeoutSeconds);
         RegisterClient(services, DownstreamClientNames.People, options.People, options.TimeoutSeconds);
         RegisterClient(services, DownstreamClientNames.Leave, options.Leave, options.TimeoutSeconds);
         RegisterClient(services, DownstreamClientNames.Payroll, options.Payroll, options.TimeoutSeconds);
@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
         RegisterClient(services, DownstreamClientNames.Surveys, options.Surveys, options.TimeoutSeconds);
         RegisterClient(services, DownstreamClientNames.Notifications, options.Notifications, options.TimeoutSeconds);
 
-        services.AddScoped<IIamDownstreamClient, IamDownstreamClient>();
+        services.AddScoped<IPlatformDownstreamClient, PlatformDownstreamClient>();
         services.AddScoped<IPeopleDownstreamClient, PeopleDownstreamClient>();
         services.AddScoped<ILeaveDownstreamClient, LeaveDownstreamClient>();
         services.AddScoped<IPayrollDownstreamClient, PayrollDownstreamClient>();

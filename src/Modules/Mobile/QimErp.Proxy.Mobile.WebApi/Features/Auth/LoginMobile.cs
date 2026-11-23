@@ -19,10 +19,10 @@ public static class LoginMobile
         }
     }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Command, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Command, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Command request, CancellationToken cancellationToken)
-            => iamClient.LoginAsync(new
+            => platformClient.LoginAsync(new
             {
                 request.Username,
                 request.Password,

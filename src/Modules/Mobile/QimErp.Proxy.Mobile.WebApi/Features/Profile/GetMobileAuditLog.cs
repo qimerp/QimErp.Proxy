@@ -8,11 +8,11 @@ public static class GetMobileAuditLog
         public int PageSize { get; set; } = 20;
     }
 
-    public class Handler(IIamDownstreamClient iamClient)
+    public class Handler(IPlatformDownstreamClient platformClient)
         : IRequestHandler<Query, Result<PaginatedList<AuditActivityResponse>>>
     {
         public Task<Result<PaginatedList<AuditActivityResponse>>> Handle(Query request, CancellationToken cancellationToken)
-            => iamClient.GetMyActivitiesAsync(request.PageNumber, request.PageSize, cancellationToken);
+            => platformClient.GetMyActivitiesAsync(request.PageNumber, request.PageSize, cancellationToken);
     }
 }
 

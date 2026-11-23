@@ -19,10 +19,10 @@ public static class CompleteTwoFactorMobile
         }
     }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Command, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Command, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Command request, CancellationToken cancellationToken)
-            => iamClient.CompleteTwoFactorLoginAsync(new
+            => platformClient.CompleteTwoFactorLoginAsync(new
             {
                 request.UserId,
                 request.Code

@@ -3,7 +3,7 @@ using QimErp.Shared.Common.Extensions;
 
 namespace QimErp.Proxy.Mobile.Shared.Clients;
 
-public interface IIamDownstreamClient
+public interface IPlatformDownstreamClient
 {
     Task<Result<JsonElement>> LoginAsync(object body, CancellationToken cancellationToken = default);
     Task<Result<JsonElement>> RefreshAsync(object body, CancellationToken cancellationToken = default);
@@ -17,43 +17,43 @@ public interface IIamDownstreamClient
     Task<Result<PaginatedList<AuditActivityResponse>>> GetMyActivitiesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
 }
 
-public sealed class IamDownstreamClient(
+public sealed class PlatformDownstreamClient(
     IHttpClientFactory httpClientFactory,
     IHttpContextAccessor httpContextAccessor,
-    ILogger<IamDownstreamClient> logger)
-    : DownstreamHttpClientBase(httpClientFactory, httpContextAccessor, logger), IIamDownstreamClient
+    ILogger<PlatformDownstreamClient> logger)
+    : DownstreamHttpClientBase(httpClientFactory, httpContextAccessor, logger), IPlatformDownstreamClient
 {
-    protected override string ClientName => DownstreamClientNames.Iam;
+    protected override string ClientName => DownstreamClientNames.Platform;
 
     public Task<Result<JsonElement>> LoginAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamLogin, body, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformLogin, body, cancellationToken);
 
     public Task<Result<JsonElement>> RefreshAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamRefresh, body, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformRefresh, body, cancellationToken);
 
     public Task<Result<JsonElement>> GetMeAsync(CancellationToken cancellationToken = default)
-        => GetRawAsync(MobileApiConstants.Downstream.IamMe, cancellationToken);
+        => GetRawAsync(MobileApiConstants.Downstream.PlatformMe, cancellationToken);
 
     public Task<Result<JsonElement>> GetTenantConfigAsync(string domain, CancellationToken cancellationToken = default)
-        => GetRawAsync(string.Format(MobileApiConstants.Downstream.IamTenantConfig, domain), cancellationToken);
+        => GetRawAsync(string.Format(MobileApiConstants.Downstream.PlatformTenantConfig, domain), cancellationToken);
 
     public Task<Result<JsonElement>> CompleteTwoFactorLoginAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamCompleteTwoFactor, body, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformCompleteTwoFactor, body, cancellationToken);
 
     public Task<Result<JsonElement>> GetSessionsAsync(CancellationToken cancellationToken = default)
-        => GetRawAsync(MobileApiConstants.Downstream.IamSessions, cancellationToken);
+        => GetRawAsync(MobileApiConstants.Downstream.PlatformSessions, cancellationToken);
 
     public Task<Result<JsonElement>> RevokeSessionAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamSessionsRevoke, body, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformSessionsRevoke, body, cancellationToken);
 
     public Task<Result<JsonElement>> RevokeAllSessionsAsync(CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamSessionsRevokeAll, null, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformSessionsRevokeAll, null, cancellationToken);
 
     public Task<Result<JsonElement>> ChangePasswordAsync(object body, CancellationToken cancellationToken = default)
-        => PostRawAsync(MobileApiConstants.Downstream.IamChangePassword, body, cancellationToken);
+        => PostRawAsync(MobileApiConstants.Downstream.PlatformChangePassword, body, cancellationToken);
 
     public Task<Result<PaginatedList<AuditActivityResponse>>> GetMyActivitiesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
         => GetAsync<PaginatedList<AuditActivityResponse>>(
-            $"{MobileApiConstants.Downstream.IamMyActivities}?pageNumber={pageNumber}&pageSize={pageSize}",
+            $"{MobileApiConstants.Downstream.PlatformMyActivities}?pageNumber={pageNumber}&pageSize={pageSize}",
             cancellationToken);
 }

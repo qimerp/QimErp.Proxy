@@ -31,7 +31,6 @@ public class ProxyGatewayData02GuardTests
             .Where(p =>
             {
                 var name = Path.GetFileName(p);
-                // Skip interface-only files (IFooDownstreamClient.cs), keep IamDownstreamClient.cs.
                 return !(name.StartsWith('I') && name.Length > 1 && char.IsUpper(name[1]));
             })
             .ToList();

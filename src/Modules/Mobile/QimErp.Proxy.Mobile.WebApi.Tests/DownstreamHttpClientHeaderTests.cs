@@ -35,7 +35,7 @@ public class DownstreamHttpClientHeaderTests
             });
 
         var factory = new Mock<IHttpClientFactory>();
-        factory.Setup(f => f.CreateClient(DownstreamClientNames.Iam))
+        factory.Setup(f => f.CreateClient(DownstreamClientNames.Platform))
             .Returns(new HttpClient(handler.Object)
             {
                 BaseAddress = new Uri("http://localhost:9050/")
@@ -48,10 +48,10 @@ public class DownstreamHttpClientHeaderTests
         accessor.HttpContext.Request.Headers.Authorization = "Bearer test-token";
         accessor.HttpContext.Request.Headers["X-Correlation-Id"] = "corr-123";
 
-        var client = new IamDownstreamClient(
+        var client = new PlatformDownstreamClient(
             factory.Object,
             accessor,
-            NullLogger<IamDownstreamClient>.Instance);
+            NullLogger<PlatformDownstreamClient>.Instance);
 
         var result = await client.GetMeAsync();
 
@@ -62,7 +62,7 @@ public class DownstreamHttpClientHeaderTests
         captured.Headers.GetValues("X-Correlation-Id").Should().ContainSingle("corr-123");
         captured.Headers.Contains("X-Company-Id").Should().BeFalse();
         captured.Headers.Contains("X-Company-Scope").Should().BeFalse();
-        captured.RequestUri!.ToString().Should().Contain(MobileApiConstants.Downstream.IamMe);
+        captured.RequestUri!.ToString().Should().Contain(MobileApiConstants.Downstream.PlatformMe);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class DownstreamHttpClientHeaderTests
             });
 
         var factory = new Mock<IHttpClientFactory>();
-        factory.Setup(f => f.CreateClient(DownstreamClientNames.Iam))
+        factory.Setup(f => f.CreateClient(DownstreamClientNames.Platform))
             .Returns(new HttpClient(handler.Object)
             {
                 BaseAddress = new Uri("http://localhost:9050/")
@@ -102,10 +102,10 @@ public class DownstreamHttpClientHeaderTests
         accessor.HttpContext.Request.Headers["X-Company-Id"] = "company-a";
         accessor.HttpContext.Request.Headers["X-Company-Scope"] = "all";
 
-        var client = new IamDownstreamClient(
+        var client = new PlatformDownstreamClient(
             factory.Object,
             accessor,
-            NullLogger<IamDownstreamClient>.Instance);
+            NullLogger<PlatformDownstreamClient>.Instance);
 
         var result = await client.GetMeAsync();
 

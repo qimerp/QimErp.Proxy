@@ -6,10 +6,10 @@ public static class RevokeAllMobileSessions
 {
     public class Command : IRequest<Result<JsonElement>> { }
 
-    public class Handler(IIamDownstreamClient iamClient) : IRequestHandler<Command, Result<JsonElement>>
+    public class Handler(IPlatformDownstreamClient platformClient) : IRequestHandler<Command, Result<JsonElement>>
     {
         public Task<Result<JsonElement>> Handle(Command request, CancellationToken cancellationToken)
-            => iamClient.RevokeAllSessionsAsync(cancellationToken);
+            => platformClient.RevokeAllSessionsAsync(cancellationToken);
     }
 }
 
